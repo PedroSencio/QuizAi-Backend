@@ -1,14 +1,17 @@
 
 import os
+from dotenv import load_dotenv
 from flask import Flask
 from flask_cors import CORS
 from openai import OpenAI
 
 
-app = Flask(__name__)
+CORS(app)
+load_dotenv()
 CORS(app)
 
-client = OpenAI(api_key='REMOVED_KEY')
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 prompt = """
 Você é um gerador de quizzes educacionais. Recebe os seguintes parâmetros e gera um conjunto de questões no formato JSON.
@@ -79,17 +82,18 @@ def gerar_quiz():
   content = response.choices[0].message.content.strip()
   try:
     # Tenta extrair o JSON da resposta
-    import json
-    json_start = content.find('{')
-    json_data = json.loads(content[json_start:])
+    import os
+    from flask import Flask
+    from flask_cors import CORS
+    from openai import OpenAI
+    from dotenv import load_dotenv
 
-    # Validação: garantir que answer_index corresponde à alternativa correta para múltipla escolha
-    for q in json_data.get('questions', []):
-      if q.get('type') == 'multiple_choice':
-        choices = q.get('choices', [])
-        answer_index = q.get('answer_index')
-        explanation = q.get('explanation', '')
-        # Tenta extrair a resposta correta da explicação
+    load_dotenv()
+    app = Flask(__name__)
+    CORS(app)
+
+    OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+    client = OpenAI(api_key=OPENAI_API_KEY)
         import re
         match = re.search(r'(\d+|\w+|"[^"]+")', explanation)
         if match:
