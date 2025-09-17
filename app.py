@@ -5,7 +5,7 @@ from flask import Flask
 from flask_cors import CORS
 from openai import OpenAI
 
-
+app = Flask(__name__)
 CORS(app)
 load_dotenv()
 CORS(app)
@@ -82,29 +82,8 @@ def gerar_quiz():
   content = response.choices[0].message.content.strip()
   try:
     # Tenta extrair o JSON da resposta
-    import os
-    from flask import Flask
-    from flask_cors import CORS
-    from openai import OpenAI
-    from dotenv import load_dotenv
-
-    load_dotenv()
-    app = Flask(__name__)
-    CORS(app)
-
-    OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
-    client = OpenAI(api_key=OPENAI_API_KEY)
-        import re
-        match = re.search(r'(\d+|\w+|"[^"]+")', explanation)
-        if match:
-          correct_value = match.group(1)
-          # Remove aspas se houver
-          correct_value = correct_value.strip('"')
-          # Procura o valor correto nas alternativas
-          for idx, choice in enumerate(choices):
-            if str(choice).strip() == correct_value:
-              q['answer_index'] = idx
-              break
+    import json
+    json_data = json.loads(content)
     return jsonify(json_data)
   except Exception:
     return jsonify({'erro': 'Não foi possível gerar o quiz corretamente.', 'resposta': content}), 400
