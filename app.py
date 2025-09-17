@@ -84,6 +84,29 @@ def gerar_quiz():
     # Tenta extrair o JSON da resposta
     import json
     json_data = json.loads(content)
+    
+    # Validação: corrigir respostas de expressões matemáticas
+    for q in json_data.get('questions', []):
+      if q.get('type') == 'multiple_choice':
+        choices = q.get('choices', [])
+        prompt_text = q.get('prompt', '')
+        
+        # Detecta se é uma expressão matemática
+        import re
+        math_match = re.search(r'(\d+(?:\s*[+\-*/]\s*\d+)+)', prompt_text)
+        if math_match:
+          expression = math_match.group(1).replace(' ', '')
+          try:
+            # Calcula o resultado correto da expressão
+            correct_result = eval(expression)
+            # Procura o resultado correto nas alternativas
+            for idx, choice in enumerate(choices):
+              if str(choice).strip() == str(correct_result):
+                q['answer_index'] = idx
+                break
+          except:
+            pass  # Se der erro no eval, mantém o original
+    
     return jsonify(json_data)
   except Exception:
     return jsonify({'erro': 'Não foi possível gerar o quiz corretamente.', 'resposta': content}), 400
