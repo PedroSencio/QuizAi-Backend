@@ -1,0 +1,28 @@
+name: Run Flask Backend
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run Flask app (test)
+        run: |
+          python app.py &
+          sleep 10
+          curl -X POST http://127.0.0.1:5000/gerar_quiz -H "Content-Type: application/json" -d '{"assunto":"Python","quantidade_questoes":1,"dificuldade":"fácil","tipos_permitidos":"multipla escolha","idioma":"português"}'
