@@ -14,7 +14,7 @@ OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 prompt = """
-Você é um gerador de quizzes educacionais. Recebe os seguintes parâmetros e gera um conjunto de questões no formato JSON.
+Você é um gerador de quizzes educacionais. Recebe os seguintes parâmetros e gera um conjunto de questões VARIADAS e DIVERSIFICADAS no formato JSON.
 
 Parâmetros:
 - Assunto: {assunto}
@@ -23,35 +23,28 @@ Parâmetros:
 - Tipos de questões permitidos: {tipos_permitidos}  # escolha entre 'multipla escolha' ou 'verdadeiro ou falso'
 - Idioma: {idioma}
 
-Regras:
-1. As questões devem ser variadas e abordar diferentes aspectos do assunto solicitado.
-2. Para "multipla escolha", forneça 3-5 alternativas e o índice da resposta correta.
-3. Para "resposta curta", forneça um espaço para a resposta do usuário.
-4. A resposta deve ser explicada de forma concisa.
-5. O JSON gerado deve seguir a estrutura abaixo (não inclua texto fora do JSON):
-
-Exemplo de saída JSON:
+Regras IMPORTANTES:
+1. VARIE OS TIPOS DE PERGUNTAS - não repita o mesmo padrão
+2. Para matemática: inclua operações diferentes (soma, subtração, multiplicação, divisão, precedência)
+3. Para outras matérias: varie conceitos, definições, aplicações práticas
+4. NUNCA repita perguntas similares (como "5+3*2", "10+2+5" - varie completamente)
+5. Para múltipla escolha, forneça 4 alternativas diferentes e o índice correto (0-3)
+6. O JSON deve seguir EXATAMENTE esta estrutura:
 
 {{
   "questions": [
     {{
       "id": "1",
       "type": "multiple_choice",
-      "prompt": "Qual é o valor de 7 × 8?",
-      "choices": ["48", "54", "56", "64"],
-      "answer_index": 2,
-      "explanation": "7 × 8 = 56."
-    }},
-    {{
-      "id": "2",
-      "type": "true_false",
-      "prompt": "A água é um bom condutor de eletricidade.",
-      "choices": ["Verdadeiro", "Falso"],
-      "answer_index": 1,
-      "explanation": "Água pura não conduz eletricidade, mas a água com impurezas pode conduzir."
+      "prompt": "Pergunta variada aqui",
+      "choices": ["opção1", "opção2", "opção3", "opção4"],
+      "answer_index": 0,
+      "explanation": "Explicação clara da resposta."
     }}
   ]
 }}
+
+IMPORTANTE: Para expressões matemáticas, calcule CORRETAMENTE seguindo a ordem de operações!
 """
 
 from flask import request, jsonify
@@ -91,18 +84,20 @@ def gerar_quiz():
         choices = q.get('choices', [])
         prompt_text = q.get('prompt', '')
         
-        # Detecta se é uma expressão matemática
+        # Detecta se é uma expressão matemática simples
         import re
         math_match = re.search(r'(\d+(?:\s*[+\-*/]\s*\d+)+)', prompt_text)
         if math_match:
           expression = math_match.group(1).replace(' ', '')
           try:
             # Calcula o resultado correto da expressão
-            correct_result = eval(expression)
+            correct_result = str(eval(expression))
             # Procura o resultado correto nas alternativas
             for idx, choice in enumerate(choices):
-              if str(choice).strip() == str(correct_result):
+              if str(choice).strip() == correct_result:
                 q['answer_index'] = idx
+                # Atualiza a explicação com o cálculo correto
+                q['explanation'] = f"Calculando: {expression} = {correct_result}"
                 break
           except:
             pass  # Se der erro no eval, mantém o original
